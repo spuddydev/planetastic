@@ -1,4 +1,4 @@
-class_name IcospherePerturber
+class_name SpherePerturber
 extends RefCounted
 ## Perturbs icosphere topology via seeded edge rotation for organic irregularity.
 ##
@@ -23,7 +23,7 @@ const MAX_ANGLE := 2.618
 ## [param data]: The icosphere topology to modify (mutated in place).
 ## [param distortion]: 0.0 = no perturbation, 1.0 = full perturbation.
 ## [param rng]: Seeded RandomNumberGenerator for deterministic results.
-static func perturb(data: IcosphereData, distortion: float, rng: RandomNumberGenerator) -> void:
+static func perturb(data: SphereData, distortion: float, rng: RandomNumberGenerator) -> void:
 	if distortion <= 0.0:
 		return
 
@@ -39,7 +39,7 @@ static func perturb(data: IcosphereData, distortion: float, rng: RandomNumberGen
 
 
 ## Attempt to rotate a single edge. Returns true if the rotation was performed.
-static func _try_rotate_edge(data: IcosphereData, edge: Vector2i) -> bool:
+static func _try_rotate_edge(data: SphereData, edge: Vector2i) -> bool:
 	var adj := data.get_edge_triangles(edge.x, edge.y)
 	if adj.size() != 2:
 		return false
@@ -114,7 +114,7 @@ static func _opposite_vertex(tri: Vector3i, a: int, b: int) -> int:
 
 
 ## Overwrite a triangle's vertex indices in the flat array.
-static func _set_triangle(data: IcosphereData, tri_idx: int, a: int, b: int, c: int) -> void:
+static func _set_triangle(data: SphereData, tri_idx: int, a: int, b: int, c: int) -> void:
 	var base := tri_idx * 3
 	data.triangles[base] = a
 	data.triangles[base + 1] = b
@@ -123,7 +123,7 @@ static func _set_triangle(data: IcosphereData, tri_idx: int, a: int, b: int, c: 
 
 ## Ensure a triangle's winding produces an outward-facing normal.
 ## If the cross-product normal points inward (away from vertex), swap two verts.
-static func _ensure_outward_winding(data: IcosphereData, tri_idx: int) -> void:
+static func _ensure_outward_winding(data: SphereData, tri_idx: int) -> void:
 	var base := tri_idx * 3
 	var v0 := data.vertices[data.triangles[base]]
 	var v1 := data.vertices[data.triangles[base + 1]]

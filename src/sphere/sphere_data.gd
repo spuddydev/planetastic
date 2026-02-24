@@ -1,4 +1,4 @@
-class_name IcosphereData
+class_name SphereData
 extends RefCounted
 ## Data container for icosphere topology: vertices, triangles, and adjacency.
 ##
