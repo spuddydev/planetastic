@@ -11,8 +11,13 @@ config_version=5
 [application]
 
 config/name="planetastic"
+run/main_scene="uid://cvpfwsne7cmw2"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gut/plugin.cfg")
 
 [physics]
 
