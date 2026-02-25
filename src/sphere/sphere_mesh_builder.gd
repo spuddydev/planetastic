@@ -38,5 +38,4 @@ static func build_mesh(
 			st.add_vertex(c0)
 			st.add_vertex(c1)
 
-	st.generate_tangents()
 	return st.commit()

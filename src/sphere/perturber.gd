@@ -40,7 +40,9 @@ static func perturb(data: SphereData, distortion: float, rng: RandomNumberGenera
 
 ## Attempt to rotate a single edge. Returns true if the rotation was performed.
 static func _try_rotate_edge(data: SphereData, edge: Vector2i) -> bool:
-	var adj := data.get_edge_triangles(edge.x, edge.y)
+	# Duplicate so we have stable indices — _unregister_triangle modifies
+	# the underlying array in the dictionary.
+	var adj := data.get_edge_triangles(edge.x, edge.y).duplicate()
 	if adj.size() != 2:
 		return false
 
@@ -87,9 +89,12 @@ static func _try_rotate_edge(data: SphereData, edge: Vector2i) -> bool:
 		return false
 
 	# --- Perform the rotation ---
+	# Remove old triangles from adjacency before changing them.
+	data._unregister_triangle(adj[0])
+	data._unregister_triangle(adj[1])
+
 	# Old: tri_a = (A, B, C), tri_b = (A, B, D) [approximately]
 	# New: tri_a → (A, C, D), tri_b → (B, D, C)
-	# We must ensure correct CCW winding using cross product checks.
 	_set_triangle(data, adj[0], edge.x, c, d)
 	_set_triangle(data, adj[1], edge.y, d, c)
 
@@ -97,8 +102,9 @@ static func _try_rotate_edge(data: SphereData, edge: Vector2i) -> bool:
 	_ensure_outward_winding(data, adj[0])
 	_ensure_outward_winding(data, adj[1])
 
-	# Rebuild adjacency for the affected region.
-	data.build_adjacency()
+	# Re-register the modified triangles in adjacency.
+	data._register_triangle(adj[0])
+	data._register_triangle(adj[1])
 	return true
 
 

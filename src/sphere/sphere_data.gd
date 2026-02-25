@@ -78,3 +78,44 @@ func get_vertex_triangles(vi: int) -> PackedInt32Array:
 ## Get how many triangles share this vertex (its "valence").
 func get_vertex_neighbor_count(vi: int) -> int:
 	return _vertex_triangles[vi].size()
+
+
+## Remove a triangle from the adjacency caches (but not from the triangles array).
+## Used for incremental updates when rotating an edge.
+func _unregister_triangle(ti: int) -> void:
+	var tri := get_triangle(ti)
+	var verts := [tri.x, tri.y, tri.z]
+
+	# Remove from vertex → triangle cache.
+	for v in verts:
+		var arr: PackedInt32Array = _vertex_triangles[v]
+		var idx := arr.find(ti)
+		if idx != -1:
+			_vertex_triangles[v].remove_at(idx)
+
+	# Remove from edge → triangle cache.
+	for i in 3:
+		var key := SphereMath.edge_key(verts[i], verts[(i + 1) % 3])
+		if _edge_triangles.has(key):
+			var arr: PackedInt32Array = _edge_triangles[key]
+			var idx := arr.find(ti)
+			if idx != -1:
+				arr.remove_at(idx)
+			if arr.is_empty():
+				_edge_triangles.erase(key)
+
+
+## Add a triangle to the adjacency caches (assumes it's already in the triangles array).
+## Used for incremental updates when rotating an edge.
+func _register_triangle(ti: int) -> void:
+	var tri := get_triangle(ti)
+	var verts := [tri.x, tri.y, tri.z]
+
+	for v in verts:
+		_vertex_triangles[v].append(ti)
+
+	for i in 3:
+		var key := SphereMath.edge_key(verts[i], verts[(i + 1) % 3])
+		if not _edge_triangles.has(key):
+			_edge_triangles[key] = PackedInt32Array()
+		_edge_triangles[key].append(ti)

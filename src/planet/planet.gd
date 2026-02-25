@@ -12,11 +12,11 @@ extends Node3D
 
 ## Subdivision level. 0 = 20 triangles, each level multiplies by 4.
 ## Level 3 (1280 triangles) is a good starting point.
-@export_range(0, 6) var level: int = 3:
+@export_range(0, 6) var level: int = 4:
 	set = _set_level
 
 ## How much to break the regular icosahedron pattern (0 = none, 1 = maximum).
-@export_range(0.0, 1.0, 0.01) var distortion: float = 0.5:
+@export_range(0.0, 1.0, 0.01) var distortion: float = 0.7:
 	set = _set_distortion
 
 ## Radius of the planet mesh in world units.
