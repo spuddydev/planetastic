@@ -81,7 +81,7 @@ func get_all_edges() -> Array:
 
 
 ## Get how many triangles share this vertex (its "valence").
-func get_vertex_neighbour_count(vi: int) -> int:
+func get_vertex_valence(vi: int) -> int:
 	return _vertex_triangles[vi].size()
 
 
