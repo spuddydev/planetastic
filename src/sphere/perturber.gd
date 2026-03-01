@@ -60,10 +60,10 @@ static func _try_rotate_edge(data: SphereData, edge: Vector2i) -> bool:
 	# --- Constraint checks ---
 
 	# 1. Valence: A and B lose a triangle, C and D gain one.
-	var val_a := data.get_vertex_neighbor_count(edge.x)
-	var val_b := data.get_vertex_neighbor_count(edge.y)
-	var val_c := data.get_vertex_neighbor_count(c)
-	var val_d := data.get_vertex_neighbor_count(d)
+	var val_a := data.get_vertex_neighbour_count(edge.x)
+	var val_b := data.get_vertex_neighbour_count(edge.y)
+	var val_c := data.get_vertex_neighbour_count(c)
+	var val_d := data.get_vertex_neighbour_count(d)
 	if val_a - 1 < MIN_VALENCE or val_b - 1 < MIN_VALENCE:
 		return false
 	if val_c + 1 > MAX_VALENCE or val_d + 1 > MAX_VALENCE:

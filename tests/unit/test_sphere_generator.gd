@@ -60,7 +60,7 @@ func test_base_vertex_valence() -> void:
 	var data := SphereGenerator.generate(0)
 	for vi in data.vertices.size():
 		assert_eq(
-			data.get_vertex_neighbor_count(vi),
+			data.get_vertex_neighbour_count(vi),
 			5,
 			"base icosahedron vertex %d should have valence 5" % vi,
 		)
@@ -72,7 +72,7 @@ func test_subdivided_interior_vertex_valence() -> void:
 	var data := SphereGenerator.generate(1)
 	for vi in range(12, data.vertices.size()):
 		assert_eq(
-			data.get_vertex_neighbor_count(vi),
+			data.get_vertex_neighbour_count(vi),
 			6,
 			"subdivided interior vertex %d should have valence 6" % vi,
 		)

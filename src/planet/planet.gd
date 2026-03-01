@@ -7,7 +7,7 @@ extends Node3D
 ## trigger live regeneration in the editor thanks to @tool.
 
 ## Seed for deterministic generation. Same seed = same planet.
-@export var seed: int = 0:
+@export var planet_seed: int = 0:
 	set = _set_seed
 
 ## Subdivision level. 0 = 20 triangles, each level multiplies by 4.
@@ -32,6 +32,7 @@ func _ready() -> void:
 	add_child(_mesh_instance)
 	# In-editor children need this to not be saved into the scene file.
 	_mesh_instance.owner = null
+	_dirty = false
 	_regenerate()
 
 
@@ -42,7 +43,7 @@ func _process(_delta: float) -> void:
 
 
 func _set_seed(value: int) -> void:
-	seed = value
+	planet_seed = value
 	_dirty = true
 
 
@@ -66,21 +67,21 @@ func _regenerate() -> void:
 		return
 
 	var rng := RandomNumberGenerator.new()
-	rng.seed = hash(seed)
+	rng.seed = hash(planet_seed)
 
-	# 1. Generate subdivided icosahedron.
+	# Generate subdivided icosahedron
 	var data := SphereGenerator.generate(level)
 
-	# 2. Perturb + relax for organic irregularity.
+	# Perturb and relax for organic irregularity
 	SphereRelaxer.relax_full(data, distortion, rng)
 
-	# 3. Build dual polyhedron (Voronoi-like tiles).
+	# Build dual polyhedron (Voronoi-like tiles)
 	var cells := DualMeshBuilder.build(data)
 
-	# 4. Convert to renderable mesh.
+	# Convert to renderable mesh
 	_mesh_instance.mesh = SphereMeshBuilder.build_mesh(cells, radius, rng)
 
-	# Temporary: material that shows per-tile vertex colors.
+	# Material that shows per-tile vertex colors
 	var mat := StandardMaterial3D.new()
 	mat.vertex_color_use_as_albedo = true
 	_mesh_instance.material_override = mat

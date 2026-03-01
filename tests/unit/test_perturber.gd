@@ -25,7 +25,7 @@ func test_valence_constraints() -> void:
 	SpherePerturber.perturb(data, 1.0, rng)
 
 	for vi in data.vertices.size():
-		var valence := data.get_vertex_neighbor_count(vi)
+		var valence := data.get_vertex_neighbour_count(vi)
 		assert_true(
 			valence >= 5 and valence <= 7,
 			"vertex %d valence %d should be in [5, 7]" % [vi, valence],

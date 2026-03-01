@@ -36,9 +36,9 @@ static func build(data: SphereData) -> Array[DualCell]:
 		corners = _sort_ccw(cell.center, corners)
 		cell.corners = corners
 
-		# Find neighbor cells: for each edge of this cell (between consecutive
-		# corners), the neighbor is the other vertex that shares that triangle.
-		cell.neighbor_indices = _find_neighbors(data, vi, tri_indices, centroids, corners)
+		# Find neighbour cells: for each edge of this cell (between consecutive
+		# corners), the neighbour is the other vertex that shares that triangle.
+		cell.neighbour_indices = _find_neighbours(data, vi, tri_indices, centroids, corners)
 
 		cells[vi] = cell
 
@@ -79,16 +79,16 @@ static func _sort_ccw(center: Vector3, corners: PackedVector3Array) -> PackedVec
 	return sorted
 
 
-## Find the neighbor cell indices for a vertex's dual cell.
-## Each consecutive pair of corners corresponds to a shared edge with a neighbor.
-static func _find_neighbors(
+## Find the neighbour cell indices for a vertex's dual cell.
+## Each consecutive pair of corners corresponds to a shared edge with a neighbour.
+static func _find_neighbours(
 	data: SphereData,
 	vi: int,
 	tri_indices: PackedInt32Array,
 	centroids: PackedVector3Array,
 	sorted_corners: PackedVector3Array,
 ) -> PackedInt32Array:
-	var neighbors := PackedInt32Array()
+	var neighbours := PackedInt32Array()
 
 	# For each pair of consecutive corners, find which vertex shares both
 	# of the triangles that produced those corners.
@@ -100,16 +100,16 @@ static func _find_neighbors(
 		var ti_a := -1
 		var ti_b := -1
 		for ti in tri_indices:
-			if centroids[ti].is_equal_approx(corner_a):
+			if centroids[ti].is_equal_approx(corner_a):  # A liiiitttle sketchy
 				ti_a = ti
 			if centroids[ti].is_equal_approx(corner_b):
 				ti_b = ti
 
 		if ti_a == -1 or ti_b == -1:
-			neighbors.append(-1)
+			neighbours.append(-1)
 			continue
 
-		# The neighbor is the vertex (other than vi) shared by both triangles.
+		# The neighbour is the vertex (other than vi) shared by both triangles.
 		var tri_a := data.get_triangle(ti_a)
 		var tri_b := data.get_triangle(ti_b)
 		var verts_a := [tri_a.x, tri_a.y, tri_a.z]
@@ -120,6 +120,6 @@ static func _find_neighbors(
 			if v != vi and v in verts_b:
 				found = v
 				break
-		neighbors.append(found)
+		neighbours.append(found)
 
-	return neighbors
+	return neighbours

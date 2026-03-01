@@ -47,7 +47,8 @@ static func _create_base() -> SphereData:
 		data.vertices.append(v.normalized())
 
 	# This fucking suuuucks man the formatter will not let me arrange these into
-	# triplets... now it just looks terrible... These are the 20 base triangles.
+	# triplets... now it just looks terrible... there is no option to change this.
+	# These are the 20 base triangles.
 	# I have broken them up with empty comments for my own sake
 	data.triangles = PackedInt32Array(
 		[

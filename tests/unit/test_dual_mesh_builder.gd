@@ -40,16 +40,16 @@ func test_pentagon_count_at_base() -> void:
 	assert_eq(hexagons, _data.vertices.size() - 12, "remaining should be hexagons")
 
 
-func test_neighbor_symmetry() -> void:
-	# If cell A lists cell B as a neighbor, cell B should list cell A.
+func test_neighbour_symmetry() -> void:
+	# If cell A lists cell B as a neighbour, cell B should list cell A.
 	var cells := DualMeshBuilder.build(_data)
 	for i in cells.size():
-		for ni in cells[i].neighbor_indices:
+		for ni in cells[i].neighbour_indices:
 			if ni == -1:
 				continue
 			var found := false
-			for nj in cells[ni].neighbor_indices:
+			for nj in cells[ni].neighbour_indices:
 				if nj == i:
 					found = true
 					break
-			assert_true(found, "cell %d neighbors %d, but not vice versa" % [i, ni])
+			assert_true(found, "cell %d neighbours %d, but not vice versa" % [i, ni])
