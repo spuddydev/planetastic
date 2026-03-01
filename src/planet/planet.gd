@@ -79,9 +79,10 @@ func _regenerate() -> void:
 	var cells := DualMeshBuilder.build(data)
 
 	# Convert to renderable mesh
-	_mesh_instance.mesh = SphereMeshBuilder.build_mesh(cells, radius, rng)
+	_mesh_instance.mesh = SphereMeshBuilder.build_mesh(cells, radius)
 
 	# Material that shows per-tile vertex colors
 	var mat := StandardMaterial3D.new()
 	mat.vertex_color_use_as_albedo = true
 	_mesh_instance.material_override = mat
+	mat.cull_mode = BaseMaterial3D.CULL_BACK

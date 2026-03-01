@@ -8,7 +8,8 @@ extends RefCounted
 
 ## Build an ArrayMesh from dual cells at the given radius.
 static func build_mesh(
-	cells: Array[DualCell], radius: float, rng: RandomNumberGenerator
+	cells: Array[DualCell],
+	radius: float,
 ) -> ArrayMesh:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -17,8 +18,10 @@ static func build_mesh(
 		if cell.corners.size() < 3:
 			continue
 
-		# One random color per tile — seeded so same seed = same colors.
-		var color := Color(rng.randf(), rng.randf(), rng.randf())
+		# Debug rainbow: hue from longitude (X/Z), saturation from latitude (Y).
+		var hue := fmod(atan2(cell.center.z, cell.center.x) / TAU + 1.0, 1.0)
+		var sat := 0.6 + (cell.center.y + 1.0) / 2.0 * 0.4
+		var color := Color.from_hsv(hue, sat, 0.9)
 		st.set_color(color)
 
 		var center := cell.center * radius
@@ -35,7 +38,7 @@ static func build_mesh(
 			st.set_normal(normal)
 
 			st.add_vertex(center)
-			st.add_vertex(c0)
 			st.add_vertex(c1)
+			st.add_vertex(c0)
 
 	return st.commit()
