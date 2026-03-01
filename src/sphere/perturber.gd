@@ -28,14 +28,12 @@ static func perturb(data: SphereData, distortion: float, rng: RandomNumberGenera
 		return
 
 	# Collect all edges into an array for random selection.
-	var edges: Array = data._edge_triangles.keys()
+	var edges: Array = data.get_all_edges()
 	var attempt_count := int(distortion * edges.size() * 2)
 
 	for _i in attempt_count:
 		var edge: Vector2i = edges[rng.randi_range(0, edges.size() - 1)]
 		_try_rotate_edge(data, edge)
-
-	data.build_adjacency()
 
 
 ## Attempt to rotate a single edge. Returns true if the rotation was performed.
@@ -90,8 +88,8 @@ static func _try_rotate_edge(data: SphereData, edge: Vector2i) -> bool:
 
 	# --- Perform the rotation ---
 	# Remove old triangles from adjacency before changing them.
-	data._unregister_triangle(adj[0])
-	data._unregister_triangle(adj[1])
+	data.unregister_triangle(adj[0])
+	data.unregister_triangle(adj[1])
 
 	# Old: tri_a = (A, B, C), tri_b = (A, B, D) [approximately]
 	# New: tri_a → (A, C, D), tri_b → (B, D, C)
@@ -103,8 +101,8 @@ static func _try_rotate_edge(data: SphereData, edge: Vector2i) -> bool:
 	_ensure_outward_winding(data, adj[1])
 
 	# Re-register the modified triangles in adjacency.
-	data._register_triangle(adj[0])
-	data._register_triangle(adj[1])
+	data.register_triangle(adj[0])
+	data.register_triangle(adj[1])
 	return true
 
 

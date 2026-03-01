@@ -75,6 +75,11 @@ func get_vertex_triangles(vi: int) -> PackedInt32Array:
 	return _vertex_triangles[vi]
 
 
+## Return all edge keys in the adjacency cache.
+func get_all_edges() -> Array:
+	return _edge_triangles.keys()
+
+
 ## Get how many triangles share this vertex (its "valence").
 func get_vertex_neighbour_count(vi: int) -> int:
 	return _vertex_triangles[vi].size()
@@ -82,7 +87,7 @@ func get_vertex_neighbour_count(vi: int) -> int:
 
 ## Remove a triangle from the adjacency caches (but not from the triangles array).
 ## Used for incremental updates when rotating an edge.
-func _unregister_triangle(ti: int) -> void:
+func unregister_triangle(ti: int) -> void:
 	var tri := get_triangle(ti)
 	var verts := [tri.x, tri.y, tri.z]
 
@@ -106,7 +111,7 @@ func _unregister_triangle(ti: int) -> void:
 
 ## Add a triangle to the adjacency caches (assumes it's already in the triangles array).
 ## Used for incremental updates when rotating an edge.
-func _register_triangle(ti: int) -> void:
+func register_triangle(ti: int) -> void:
 	var tri := get_triangle(ti)
 	var verts := [tri.x, tri.y, tri.z]
 
