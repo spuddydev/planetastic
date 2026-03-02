@@ -6,6 +6,9 @@ extends Node3D
 ## Attach to a Node3D in a scene. Exports are editable in the Inspector and
 ## trigger live regeneration in the editor thanks to @tool.
 
+## Number of interleaved perturbation + relaxation rounds.
+const INTERLEAVE_ROUNDS := 6
+
 ## Seed for deterministic generation. Same seed = same planet.
 @export var planet_seed: int = 0:
 	set = _set_seed
@@ -23,7 +26,14 @@ extends Node3D
 @export_range(0.1, 1000.0) var radius: float = 100.0:
 	set = _set_radius
 
+## Generated sphere topology — kept for future systems (tectonics, biomes, etc.).
+var sphere_data: SphereData
+
+## Dual cells (Voronoi-like tiles) — kept for future systems.
+var cells: Array[DualCell]
+
 var _mesh_instance: MeshInstance3D
+var _material: StandardMaterial3D
 var _dirty := true
 
 
@@ -32,6 +42,14 @@ func _ready() -> void:
 	add_child(_mesh_instance)
 	# In-editor children need this to not be saved into the scene file.
 	_mesh_instance.owner = null
+
+	# Placeholder material that shows per-tile vertex colours. The game using
+	# this addon will provide its own materials — this is for development only.
+	_material = StandardMaterial3D.new()
+	_material.vertex_color_use_as_albedo = true
+	_material.cull_mode = BaseMaterial3D.CULL_BACK
+	_mesh_instance.material_override = _material
+
 	_dirty = false
 	_regenerate()
 
@@ -70,19 +88,18 @@ func _regenerate() -> void:
 	rng.seed = hash(planet_seed)
 
 	# Generate subdivided icosahedron
-	var data := SphereGenerator.generate(level)
+	sphere_data = SphereGenerator.generate(level)
 
-	# Perturb and relax for organic irregularity
-	SphereRelaxer.relax_full(data, distortion, rng)
+	# Interleaved perturbation and relaxation for organic irregularity
+	if distortion > 0.0:
+		var partial_distortion := distortion / INTERLEAVE_ROUNDS
+		for _round in INTERLEAVE_ROUNDS:
+			SpherePerturber.perturb(sphere_data, partial_distortion, rng)
+			SphereRelaxer.relax_pass(sphere_data)
+		SphereRelaxer.relax_until_converged(sphere_data)
 
 	# Build dual polyhedron (Voronoi-like tiles)
-	var cells := DualMeshBuilder.build(data)
+	cells = DualMeshBuilder.build(sphere_data)
 
 	# Convert to renderable mesh
 	_mesh_instance.mesh = SphereMeshBuilder.build_mesh(cells, radius)
-
-	# Material that shows per-tile vertex colors
-	var mat := StandardMaterial3D.new()
-	mat.vertex_color_use_as_albedo = true
-	_mesh_instance.material_override = mat
-	mat.cull_mode = BaseMaterial3D.CULL_BACK

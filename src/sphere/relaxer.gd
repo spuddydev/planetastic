@@ -3,13 +3,10 @@ extends RefCounted
 ## Relaxes vertex positions for more uniform triangle shapes.
 ##
 ## Uses centroid-based relaxation (not Lloyd's — centroids are more stable than
-## circumcenters for distorted meshes). Interleaved with perturbation passes
-## per the Experilous approach.
+## circumcenters for distorted meshes). Only handles relaxation — pipeline
+## orchestration (interleaving with perturbation) lives in planet.gd.
 
-## Number of interleaved perturbation + relaxation rounds.
-const INTERLEAVE_ROUNDS := 6
-
-## Maximum relaxation-only passes after interleaving.
+## Maximum relaxation-only passes before giving up.
 const MAX_RELAX_PASSES := 20
 
 ## Stop when no vertex moves more than this distance in a pass.
@@ -19,26 +16,8 @@ const CONVERGENCE_THRESHOLD := 0.0001
 const RELAX_STRENGTH := 0.5
 
 
-## Run the full pipeline: interleaved perturbation+relaxation, then pure relaxation.
-static func relax_full(data: SphereData, distortion: float, rng: RandomNumberGenerator) -> void:
-	if distortion <= 0.0:
-		return
-
-	# Phase 1: Interleaved rounds — perturb a bit, relax a bit, repeat.
-	var partial_distortion := distortion / INTERLEAVE_ROUNDS
-	for _round in INTERLEAVE_ROUNDS:
-		SpherePerturber.perturb(data, partial_distortion, rng)
-		_relax_pass(data)
-
-	# Phase 2: Pure relaxation until the mesh settles.
-	for _pass in MAX_RELAX_PASSES:
-		var max_displacement := _relax_pass(data)
-		if max_displacement < CONVERGENCE_THRESHOLD:
-			break
-
-
-## One relaxation pass over all vertices. Returns max displacement for convergence.
-static func _relax_pass(data: SphereData) -> float:
+## Run a single relaxation pass. Returns the maximum vertex displacement.
+static func relax_pass(data: SphereData) -> float:
 	var max_displacement := 0.0
 	var ideal_dist := _compute_ideal_distance(data)
 
@@ -73,6 +52,14 @@ static func _relax_pass(data: SphereData) -> float:
 		data.vertices[vi] = new_pos
 
 	return max_displacement
+
+
+## Run relaxation passes until convergence or the pass limit is reached.
+static func relax_until_converged(data: SphereData) -> void:
+	for _pass in MAX_RELAX_PASSES:
+		var max_displacement := relax_pass(data)
+		if max_displacement < CONVERGENCE_THRESHOLD:
+			break
 
 
 ## Ideal corner-to-centroid distance for equilateral triangles at this mesh density.
