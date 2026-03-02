@@ -7,13 +7,13 @@ extends RefCounted
 ## orchestration (interleaving with perturbation) lives in planet.gd.
 
 ## Maximum relaxation-only passes before giving up.
-const MAX_RELAX_PASSES := 20
+const MAX_RELAX_PASSES := 50
 
 ## Stop when no vertex moves more than this distance in a pass.
-const CONVERGENCE_THRESHOLD := 0.0001
+const CONVERGENCE_THRESHOLD := 0.002
 
 ## How aggressively vertices move toward ideal positions (0-1).
-const RELAX_STRENGTH := 0.5
+const RELAX_STRENGTH := 0.75
 
 ## Minimum centroid distance to avoid normalising a near-zero vector.
 const MIN_CENTROID_DISTANCE := 0.00001
