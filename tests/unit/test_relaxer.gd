@@ -4,9 +4,7 @@ extends GutTest
 
 func test_vertices_stay_on_sphere() -> void:
 	var data := SphereGenerator.generate(1)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 42
-	SphereRelaxer.relax_full(data, 0.5, rng)
+	SphereRelaxer.relax_until_converged(data)
 
 	for i in data.vertices.size():
 		assert_almost_eq(
@@ -17,40 +15,56 @@ func test_vertices_stay_on_sphere() -> void:
 		)
 
 
-func test_zero_distortion_no_change() -> void:
+func test_relax_pass_reduces_displacement() -> void:
+	# A single relax pass should move vertices, and subsequent passes should
+	# reduce displacement (converging towards uniform spacing).
 	var data := SphereGenerator.generate(1)
-	var original_verts := data.vertices.duplicate()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 42
-	SphereRelaxer.relax_full(data, 0.0, rng)
-	assert_eq(data.vertices, original_verts, "zero distortion should not move vertices")
+	SpherePerturber.perturb(data, 0.5, rng)
+
+	var ideal_dist := SphereRelaxer.compute_ideal_distance(data)
+	var first := SphereRelaxer.relax_pass(data, ideal_dist)
+	var second := SphereRelaxer.relax_pass(data, ideal_dist)
+	assert_true(second < first, "displacement should decrease across passes")
+
+
+func test_relax_until_converged_stabilises() -> void:
+	# After full convergence, an extra pass should produce near-zero displacement.
+	var data := SphereGenerator.generate(1)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 42
+	SpherePerturber.perturb(data, 0.5, rng)
+
+	SphereRelaxer.relax_until_converged(data)
+
+	var ideal_dist := SphereRelaxer.compute_ideal_distance(data)
+	var extra := SphereRelaxer.relax_pass(data, ideal_dist)
+	assert_true(
+		extra < SphereRelaxer.CONVERGENCE_THRESHOLD,
+		"should be converged after relax_until_converged",
+	)
+
+
+func test_compute_ideal_distance_constant_across_calls() -> void:
+	# ideal distance depends only on triangle count, which doesn't change.
+	var data := SphereGenerator.generate(2)
+	var d1 := SphereRelaxer.compute_ideal_distance(data)
+	var d2 := SphereRelaxer.compute_ideal_distance(data)
+	assert_eq(d1, d2, "ideal distance should be constant for the same mesh")
 
 
 func test_determinism() -> void:
 	var data_a := SphereGenerator.generate(1)
 	var rng_a := RandomNumberGenerator.new()
 	rng_a.seed = 77
-	SphereRelaxer.relax_full(data_a, 0.5, rng_a)
+	SpherePerturber.perturb(data_a, 0.5, rng_a)
+	SphereRelaxer.relax_until_converged(data_a)
 
 	var data_b := SphereGenerator.generate(1)
 	var rng_b := RandomNumberGenerator.new()
 	rng_b.seed = 77
-	SphereRelaxer.relax_full(data_b, 0.5, rng_b)
+	SpherePerturber.perturb(data_b, 0.5, rng_b)
+	SphereRelaxer.relax_until_converged(data_b)
 
 	assert_eq(data_a.vertices, data_b.vertices, "same seed should produce same vertices")
-	assert_eq(data_a.triangles, data_b.triangles, "same seed should produce same triangles")
-
-
-func test_valence_constraints_after_full_pipeline() -> void:
-	# After the full perturb+relax pipeline, valence should still be 5-7.
-	var data := SphereGenerator.generate(2)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 55
-	SphereRelaxer.relax_full(data, 1.0, rng)
-
-	for vi in data.vertices.size():
-		var valence := data.get_vertex_neighbor_count(vi)
-		assert_true(
-			valence >= 5 and valence <= 7,
-			"vertex %d valence %d should be in [5, 7]" % [vi, valence],
-		)

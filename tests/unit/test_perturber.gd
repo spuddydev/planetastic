@@ -25,7 +25,7 @@ func test_valence_constraints() -> void:
 	SpherePerturber.perturb(data, 1.0, rng)
 
 	for vi in data.vertices.size():
-		var valence := data.get_vertex_neighbor_count(vi)
+		var valence := data.get_vertex_valence(vi)
 		assert_true(
 			valence >= 5 and valence <= 7,
 			"vertex %d valence %d should be in [5, 7]" % [vi, valence],
@@ -59,3 +59,17 @@ func test_zero_distortion_no_change() -> void:
 	rng.seed = 42
 	SpherePerturber.perturb(data, 0.0, rng)
 	assert_eq(data.triangles, original_tris, "zero distortion should not change triangles")
+
+
+func test_all_edges_have_two_triangles_after_perturbation() -> void:
+	# After perturbation, the mesh should still be closed — every edge
+	# borders exactly 2 triangles. This validates that incremental
+	# register/unregister keeps the edge cache consistent.
+	var data := SphereGenerator.generate(2)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 42
+	SpherePerturber.perturb(data, 1.0, rng)
+
+	for key: Vector2i in data.get_all_edges():
+		var adj := data.get_edge_triangles(key.x, key.y)
+		assert_eq(adj.size(), 2, "edge %s should have 2 triangles after perturbation" % str(key))

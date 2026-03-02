@@ -6,8 +6,11 @@ extends Node3D
 ## Attach to a Node3D in a scene. Exports are editable in the Inspector and
 ## trigger live regeneration in the editor thanks to @tool.
 
+## Number of interleaved perturbation and relaxation rounds.
+const INTERLEAVE_ROUNDS := 6
+
 ## Seed for deterministic generation. Same seed = same planet.
-@export var seed: int = 0:
+@export var planet_seed: int = 0:
 	set = _set_seed
 
 ## Subdivision level. 0 = 20 triangles, each level multiplies by 4.
@@ -23,15 +26,30 @@ extends Node3D
 @export_range(0.1, 1000.0) var radius: float = 100.0:
 	set = _set_radius
 
+## Generated sphere topology — kept for future systems (tectonics, biomes, etc.).
+var sphere_data: SphereData
+
+## Dual cells (Voronoi-like tiles) — kept for future systems.
+var cells: Array[DualCell]
+
 var _mesh_instance: MeshInstance3D
+var _material: StandardMaterial3D
 var _dirty := true
 
 
 func _ready() -> void:
 	_mesh_instance = MeshInstance3D.new()
 	add_child(_mesh_instance)
-	# In-editor children need this to not be saved into the scene file.
+	# In-editor children need this to not be saved into the scene file
 	_mesh_instance.owner = null
+
+	# Placeholder material for development; the game will provide its own
+	_material = StandardMaterial3D.new()
+	_material.vertex_color_use_as_albedo = true
+	_material.cull_mode = BaseMaterial3D.CULL_BACK
+	_mesh_instance.material_override = _material
+
+	_dirty = false
 	_regenerate()
 
 
@@ -42,7 +60,7 @@ func _process(_delta: float) -> void:
 
 
 func _set_seed(value: int) -> void:
-	seed = value
+	planet_seed = value
 	_dirty = true
 
 
@@ -66,21 +84,22 @@ func _regenerate() -> void:
 		return
 
 	var rng := RandomNumberGenerator.new()
-	rng.seed = hash(seed)
+	rng.seed = hash(planet_seed)
 
-	# 1. Generate subdivided icosahedron.
-	var data := SphereGenerator.generate(level)
+	# Generate subdivided icosahedron
+	sphere_data = SphereGenerator.generate(level)
 
-	# 2. Perturb + relax for organic irregularity.
-	SphereRelaxer.relax_full(data, distortion, rng)
+	# Interleaved perturbation and relaxation for organic irregularity
+	if distortion > 0.0:
+		var ideal_dist := SphereRelaxer.compute_ideal_distance(sphere_data)
+		var partial_distortion := distortion / INTERLEAVE_ROUNDS
+		for _round in INTERLEAVE_ROUNDS:
+			SpherePerturber.perturb(sphere_data, partial_distortion, rng)
+			SphereRelaxer.relax_pass(sphere_data, ideal_dist)
+		SphereRelaxer.relax_until_converged(sphere_data)
 
-	# 3. Build dual polyhedron (Voronoi-like tiles).
-	var cells := DualMeshBuilder.build(data)
+	# Build dual polyhedron (Voronoi-like tiles)
+	cells = DualMeshBuilder.build(sphere_data)
 
-	# 4. Convert to renderable mesh.
-	_mesh_instance.mesh = SphereMeshBuilder.build_mesh(cells, radius, rng)
-
-	# Temporary: material that shows per-tile vertex colors.
-	var mat := StandardMaterial3D.new()
-	mat.vertex_color_use_as_albedo = true
-	_mesh_instance.material_override = mat
+	# Convert to renderable mesh
+	_mesh_instance.mesh = SphereMeshBuilder.build_mesh(cells, radius)

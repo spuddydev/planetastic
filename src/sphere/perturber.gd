@@ -18,6 +18,9 @@ const MAX_EDGE_RATIO := 2.0
 ## Maximum allowed angle (radians) at the new edge endpoints (~150°).
 const MAX_ANGLE := 2.618
 
+## Minimum edge length to avoid division by zero in ratio checks.
+const MIN_EDGE_LENGTH := 0.0001
+
 
 ## Perform edge rotation perturbation on the icosphere.
 ## [param data]: The icosphere topology to modify (mutated in place).
@@ -27,28 +30,24 @@ static func perturb(data: SphereData, distortion: float, rng: RandomNumberGenera
 	if distortion <= 0.0:
 		return
 
-	# Collect all edges into an array for random selection.
-	var edges: Array = data._edge_triangles.keys()
+	# Collect all edges into an array for random selection
+	var edges: Array = data.get_all_edges()
 	var attempt_count := int(distortion * edges.size() * 2)
 
 	for _i in attempt_count:
 		var edge: Vector2i = edges[rng.randi_range(0, edges.size() - 1)]
 		_try_rotate_edge(data, edge)
 
-	data.build_adjacency()
-
 
 ## Attempt to rotate a single edge. Returns true if the rotation was performed.
 static func _try_rotate_edge(data: SphereData, edge: Vector2i) -> bool:
-	# Duplicate so we have stable indices — _unregister_triangle modifies
-	# the underlying array in the dictionary.
+	# Duplicate so we have stable indices; unregister_triangle modifies
+	# the underlying array in the dictionary
 	var adj := data.get_edge_triangles(edge.x, edge.y).duplicate()
 	if adj.size() != 2:
 		return false
 
-	# Find the quad: two triangles sharing this edge form a diamond.
-	# edge.x and edge.y are the shared vertices (A, B).
-	# We need the two opposite vertices (C, D) — one from each triangle.
+	# Two triangles sharing this edge form a diamond (A, B shared; C, D opposite)
 	var tri_a := data.get_triangle(adj[0])
 	var tri_b := data.get_triangle(adj[1])
 	var c := _opposite_vertex(tri_a, edge.x, edge.y)
@@ -59,24 +58,24 @@ static func _try_rotate_edge(data: SphereData, edge: Vector2i) -> bool:
 
 	# --- Constraint checks ---
 
-	# 1. Valence: A and B lose a triangle, C and D gain one.
-	var val_a := data.get_vertex_neighbor_count(edge.x)
-	var val_b := data.get_vertex_neighbor_count(edge.y)
-	var val_c := data.get_vertex_neighbor_count(c)
-	var val_d := data.get_vertex_neighbor_count(d)
+	# 1. Valence: A and B lose a triangle, C and D gain one
+	var val_a := data.get_vertex_valence(edge.x)
+	var val_b := data.get_vertex_valence(edge.y)
+	var val_c := data.get_vertex_valence(c)
+	var val_d := data.get_vertex_valence(d)
 	if val_a - 1 < MIN_VALENCE or val_b - 1 < MIN_VALENCE:
 		return false
 	if val_c + 1 > MAX_VALENCE or val_d + 1 > MAX_VALENCE:
 		return false
 
-	# 2. Edge ratio: new edge (C,D) shouldn't be too different from old (A,B).
+	# 2. Edge ratio: new edge (C,D) shouldn't be too different from old (A,B)
 	var old_len := data.vertices[edge.x].distance_to(data.vertices[edge.y])
 	var new_len := data.vertices[c].distance_to(data.vertices[d])
-	var ratio := new_len / old_len if old_len > 0.0001 else 999.0
+	var ratio := new_len / old_len if old_len > MIN_EDGE_LENGTH else 999.0
 	if ratio > MAX_EDGE_RATIO or ratio < 1.0 / MAX_EDGE_RATIO:
 		return false
 
-	# 3. Angle: no overly obtuse angles at the new edge endpoints.
+	# 3. Angle: no overly obtuse angles at the new edge endpoints
 	if (
 		SphereMath.triangle_angle_at(data.vertices[edge.x], data.vertices[c], data.vertices[d])
 		> MAX_ANGLE
@@ -89,22 +88,21 @@ static func _try_rotate_edge(data: SphereData, edge: Vector2i) -> bool:
 		return false
 
 	# --- Perform the rotation ---
-	# Remove old triangles from adjacency before changing them.
-	data._unregister_triangle(adj[0])
-	data._unregister_triangle(adj[1])
+	# Remove old triangles from adjacency before changing them
+	data.unregister_triangle(adj[0])
+	data.unregister_triangle(adj[1])
 
-	# Old: tri_a = (A, B, C), tri_b = (A, B, D) [approximately]
-	# New: tri_a → (A, C, D), tri_b → (B, D, C)
+	# Old: (A,B,C) and (A,B,D)  New: (A,C,D) and (B,D,C)
 	_set_triangle(data, adj[0], edge.x, c, d)
 	_set_triangle(data, adj[1], edge.y, d, c)
 
-	# Verify winding: normal should point outward (same direction as vertex).
+	# Verify winding: normal should point outward
 	_ensure_outward_winding(data, adj[0])
 	_ensure_outward_winding(data, adj[1])
 
-	# Re-register the modified triangles in adjacency.
-	data._register_triangle(adj[0])
-	data._register_triangle(adj[1])
+	# Re-register the modified triangles in adjacency
+	data.register_triangle(adj[0])
+	data.register_triangle(adj[1])
 	return true
 
 
@@ -136,10 +134,10 @@ static func _ensure_outward_winding(data: SphereData, tri_idx: int) -> void:
 	var v2 := data.vertices[data.triangles[base + 2]]
 
 	var normal := (v1 - v0).cross(v2 - v0)
-	# On a unit sphere, the centroid of the triangle roughly points outward.
+	# On a unit sphere, the centroid roughly points outward
 	var centroid := (v0 + v1 + v2) / 3.0
 	if normal.dot(centroid) < 0.0:
-		# Winding is clockwise — swap last two vertices to fix.
+		# Winding is clockwise, swap last two vertices to fix
 		var tmp := data.triangles[base + 1]
 		data.triangles[base + 1] = data.triangles[base + 2]
 		data.triangles[base + 2] = tmp

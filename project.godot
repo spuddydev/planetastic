@@ -15,6 +15,12 @@ run/main_scene="uid://cvpfwsne7cmw2"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
+[debug]
+
+gdscript/warnings/directory_rules={
+"res://addons": 1
+}
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/gut/plugin.cfg")
@@ -26,3 +32,4 @@ enabled=PackedStringArray("res://addons/gut/plugin.cfg")
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+textures/vram_compression/import_etc2_astc=true
