@@ -4,8 +4,8 @@
 
 [node name="Planet" type="Node3D" unique_id=2084971532]
 script = ExtResource("1_planet")
-planet_seed = -98765456787655
-level = 5
+planet_seed = -98765456787664
+level = 6
 distortion = 0.8
 radius = 10.0
 

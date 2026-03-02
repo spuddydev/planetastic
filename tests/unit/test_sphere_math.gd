@@ -36,18 +36,6 @@ func test_project_to_sphere() -> void:
 	assert_almost_eq(result.length(), 1.0, 0.0001)
 
 
-func test_sphere_centroid_on_sphere() -> void:
-	var points := PackedVector3Array(
-		[
-			Vector3(1, 0, 0),
-			Vector3(0, 1, 0),
-			Vector3(0, 0, 1),
-		]
-	)
-	var c := SphereMath.sphere_centroid(points)
-	assert_almost_eq(c.length(), 1.0, 0.0001, "centroid should be on unit sphere")
-
-
 func test_edge_key_canonical() -> void:
 	assert_eq(SphereMath.edge_key(3, 7), Vector2i(3, 7))
 	assert_eq(SphereMath.edge_key(7, 3), Vector2i(3, 7))

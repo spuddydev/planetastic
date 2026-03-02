@@ -23,14 +23,6 @@ static func project_to_sphere(v: Vector3) -> Vector3:
 	return v.normalized()
 
 
-## Compute the centroid of points on the unit sphere, projected back onto it.
-static func sphere_centroid(points: PackedVector3Array) -> Vector3:
-	var sum := Vector3.ZERO
-	for p in points:
-		sum += p
-	return sum.normalized()
-
-
 ## Create a canonical edge key (smaller index first) for deduplication.
 static func edge_key(a: int, b: int) -> Vector2i:
 	return Vector2i(mini(a, b), maxi(a, b))

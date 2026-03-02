@@ -25,9 +25,8 @@ static func generate(level: int) -> SphereData:
 static func _create_base() -> SphereData:
 	var data := SphereData.new()
 
-	# The 12 vertices of a regular icosahedron lie at the corners of three
-	# mutually perpendicular golden rectangles (aspect ratio 1:φ). We
-	# normalize them to place them on the unit sphere.
+	# Icosahedron vertices: corners of three mutually perpendicular golden
+	# rectangles, normalised onto the unit sphere
 	var raw_verts: Array[Vector3] = [
 		Vector3(-1, PHI, 0),
 		Vector3(1, PHI, 0),
@@ -145,9 +144,7 @@ static func _subdivide(data: SphereData) -> SphereData:
 	result.vertices = data.vertices.duplicate()
 	result.triangles = PackedInt32Array()
 
-	# Cache of midpoints: edge_key → vertex index. This ensures that when
-	# two triangles share an edge, they reuse the same midpoint vertex
-	# instead of creating a duplicate.
+	# Midpoint cache ensures shared edges reuse the same vertex
 	var midpoint_cache: Dictionary = {}
 
 	var tri_count := data.get_triangle_count()
@@ -157,7 +154,7 @@ static func _subdivide(data: SphereData) -> SphereData:
 		var v1 := tri.y
 		var v2 := tri.z
 
-		# Get or create the midpoint vertex for each edge.
+		# Get or create the midpoint vertex for each edge
 		var m01 := _get_midpoint(result, midpoint_cache, v0, v1)
 		var m12 := _get_midpoint(result, midpoint_cache, v1, v2)
 		var m20 := _get_midpoint(result, midpoint_cache, v2, v0)

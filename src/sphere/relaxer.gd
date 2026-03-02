@@ -33,8 +33,7 @@ static func relax_pass(data: SphereData, ideal_dist: float) -> float:
 		if tri_indices.size() < 3:
 			continue
 
-		# For each triangle around this vertex, compute centroid and compare
-		# the vertex-to-centroid distance against the ideal.
+		# Compare vertex-to-centroid distance against the ideal for each triangle
 		var displacement := Vector3.ZERO
 		for ti in tri_indices:
 			var tri := data.get_triangle(ti)
@@ -74,5 +73,5 @@ static func relax_until_converged(data: SphereData) -> void:
 static func compute_ideal_distance(data: SphereData) -> float:
 	var area_per_tri := 4.0 * PI / data.get_triangle_count()
 	var side_length := sqrt(4.0 * area_per_tri / sqrt(3.0))
-	# Slight underestimate to avoid triangles flipping inside-out from too much pressure.
+	# Slight underestimate to avoid triangles flipping inside-out
 	return side_length / sqrt(3.0) * IDEAL_DISTANCE_FACTOR

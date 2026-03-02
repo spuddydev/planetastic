@@ -6,7 +6,7 @@ extends Node3D
 ## Attach to a Node3D in a scene. Exports are editable in the Inspector and
 ## trigger live regeneration in the editor thanks to @tool.
 
-## Number of interleaved perturbation + relaxation rounds.
+## Number of interleaved perturbation and relaxation rounds.
 const INTERLEAVE_ROUNDS := 6
 
 ## Seed for deterministic generation. Same seed = same planet.
@@ -40,11 +40,10 @@ var _dirty := true
 func _ready() -> void:
 	_mesh_instance = MeshInstance3D.new()
 	add_child(_mesh_instance)
-	# In-editor children need this to not be saved into the scene file.
+	# In-editor children need this to not be saved into the scene file
 	_mesh_instance.owner = null
 
-	# Placeholder material that shows per-tile vertex colours. The game using
-	# this addon will provide its own materials — this is for development only.
+	# Placeholder material for development; the game will provide its own
 	_material = StandardMaterial3D.new()
 	_material.vertex_color_use_as_albedo = true
 	_material.cull_mode = BaseMaterial3D.CULL_BACK

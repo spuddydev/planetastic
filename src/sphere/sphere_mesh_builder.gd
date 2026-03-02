@@ -18,7 +18,7 @@ static func build_mesh(
 		if cell.corners.size() < 3:
 			continue
 
-		# Debug rainbow: hue from longitude (X/Z), saturation from latitude (Y).
+		# Debug rainbow: hue from longitude, saturation from latitude
 		var hue := fmod(atan2(cell.center.z, cell.center.x) / TAU + 1.0, 1.0)
 		var sat := 0.6 + (cell.center.y + 1.0) / 2.0 * 0.4
 		var color := Color.from_hsv(hue, sat, 0.9)
@@ -26,14 +26,12 @@ static func build_mesh(
 
 		var center := cell.center * radius
 
-		# Fan triangulation: connect center to each consecutive pair of corners.
-		# For a hexagon with corners [0,1,2,3,4,5], this creates triangles:
-		#   (center, corner0, corner1), (center, corner1, corner2), etc.
+		# Fan triangulation: connect center to each consecutive pair of corners
 		for i in cell.corners.size():
 			var c0 := cell.corners[i] * radius
 			var c1 := cell.corners[(i + 1) % cell.corners.size()] * radius
 
-			# Normal points outward from sphere center (same as the vertex direction).
+			# Normal points outward from sphere center
 			var normal := cell.center.normalized()
 			st.set_normal(normal)
 
