@@ -32,13 +32,15 @@ static func build(data: SphereData) -> Array[DualCell]:
 			corners.append(centroids[ti])
 
 		# Sort corners in CCW order around the cell center so they form a
-		# proper polygon (not a zigzag mess).
-		corners = _sort_ccw(cell.center, corners)
-		cell.corners = corners
+		# proper polygon (not a zigzag mess). Returns both sorted corners
+		# and the corresponding triangle indices in the same order.
+		var sorted := _sort_ccw(cell.center, corners, tri_indices)
+		cell.corners = sorted.corners
+		var sorted_tri_indices: PackedInt32Array = sorted.tri_indices
 
 		# Find neighbour cells: for each edge of this cell (between consecutive
 		# corners), the neighbour is the other vertex that shares that triangle.
-		cell.neighbour_indices = _find_neighbours(data, vi, tri_indices, centroids, corners)
+		cell.neighbour_indices = _find_neighbours(data, vi, sorted_tri_indices)
 
 		cells[vi] = cell
 
@@ -47,7 +49,13 @@ static func build(data: SphereData) -> Array[DualCell]:
 
 ## Sort corner points in counter-clockwise order around a center point.
 ## Projects onto the tangent plane at center, then sorts by angle.
-static func _sort_ccw(center: Vector3, corners: PackedVector3Array) -> PackedVector3Array:
+## Returns a dictionary with "corners" (PackedVector3Array) and
+## "tri_indices" (PackedInt32Array) sorted in the same order.
+static func _sort_ccw(
+	center: Vector3,
+	corners: PackedVector3Array,
+	tri_indices: PackedInt32Array,
+) -> Dictionary:
 	# Build a local 2D coordinate system on the tangent plane at center.
 	# "up" is the center itself (the normal to the sphere at this point).
 	var normal := center.normalized()
@@ -73,41 +81,28 @@ static func _sort_ccw(center: Vector3, corners: PackedVector3Array) -> PackedVec
 		indices.append(i)
 	indices.sort_custom(func(a: int, b: int) -> bool: return angles[a] < angles[b])
 
-	var sorted := PackedVector3Array()
+	var sorted_corners := PackedVector3Array()
+	var sorted_tri := PackedInt32Array()
 	for i in indices:
-		sorted.append(corners[i])
-	return sorted
+		sorted_corners.append(corners[i])
+		sorted_tri.append(tri_indices[i])
+	return {"corners": sorted_corners, "tri_indices": sorted_tri}
 
 
 ## Find the neighbour cell indices for a vertex's dual cell.
-## Each consecutive pair of corners corresponds to a shared edge with a neighbour.
+## Each consecutive pair of sorted triangle indices shares an edge with a neighbour.
 static func _find_neighbours(
 	data: SphereData,
 	vi: int,
-	tri_indices: PackedInt32Array,
-	centroids: PackedVector3Array,
-	sorted_corners: PackedVector3Array,
+	sorted_tri_indices: PackedInt32Array,
 ) -> PackedInt32Array:
 	var neighbours := PackedInt32Array()
 
 	# For each pair of consecutive corners, find which vertex shares both
 	# of the triangles that produced those corners.
-	for ci in sorted_corners.size():
-		var corner_a := sorted_corners[ci]
-		var corner_b := sorted_corners[(ci + 1) % sorted_corners.size()]
-
-		# Find which triangle indices these corners came from.
-		var ti_a := -1
-		var ti_b := -1
-		for ti in tri_indices:
-			if centroids[ti].is_equal_approx(corner_a):  # A liiiitttle sketchy
-				ti_a = ti
-			if centroids[ti].is_equal_approx(corner_b):
-				ti_b = ti
-
-		if ti_a == -1 or ti_b == -1:
-			neighbours.append(-1)
-			continue
+	for ci in sorted_tri_indices.size():
+		var ti_a := sorted_tri_indices[ci]
+		var ti_b := sorted_tri_indices[(ci + 1) % sorted_tri_indices.size()]
 
 		# The neighbour is the vertex (other than vi) shared by both triangles.
 		var tri_a := data.get_triangle(ti_a)
