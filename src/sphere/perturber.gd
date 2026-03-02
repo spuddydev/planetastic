@@ -18,6 +18,9 @@ const MAX_EDGE_RATIO := 2.0
 ## Maximum allowed angle (radians) at the new edge endpoints (~150°).
 const MAX_ANGLE := 2.618
 
+## Minimum edge length to avoid division by zero in ratio checks.
+const MIN_EDGE_LENGTH := 0.0001
+
 
 ## Perform edge rotation perturbation on the icosphere.
 ## [param data]: The icosphere topology to modify (mutated in place).
@@ -70,7 +73,7 @@ static func _try_rotate_edge(data: SphereData, edge: Vector2i) -> bool:
 	# 2. Edge ratio: new edge (C,D) shouldn't be too different from old (A,B).
 	var old_len := data.vertices[edge.x].distance_to(data.vertices[edge.y])
 	var new_len := data.vertices[c].distance_to(data.vertices[d])
-	var ratio := new_len / old_len if old_len > 0.0001 else 999.0
+	var ratio := new_len / old_len if old_len > MIN_EDGE_LENGTH else 999.0
 	if ratio > MAX_EDGE_RATIO or ratio < 1.0 / MAX_EDGE_RATIO:
 		return false
 

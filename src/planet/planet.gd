@@ -92,10 +92,11 @@ func _regenerate() -> void:
 
 	# Interleaved perturbation and relaxation for organic irregularity
 	if distortion > 0.0:
+		var ideal_dist := SphereRelaxer.compute_ideal_distance(sphere_data)
 		var partial_distortion := distortion / INTERLEAVE_ROUNDS
 		for _round in INTERLEAVE_ROUNDS:
 			SpherePerturber.perturb(sphere_data, partial_distortion, rng)
-			SphereRelaxer.relax_pass(sphere_data)
+			SphereRelaxer.relax_pass(sphere_data, ideal_dist)
 		SphereRelaxer.relax_until_converged(sphere_data)
 
 	# Build dual polyhedron (Voronoi-like tiles)
