@@ -1,6 +1,8 @@
 # Planetastic
 
-> **Status: Work in Progress**
+[![Tests](https://github.com/spuddydev/planetastic/actions/workflows/test.yml/badge.svg)](https://github.com/spuddydev/planetastic/actions/workflows/test.yml)
+[![Godot 4.6](https://img.shields.io/badge/Godot-4.6-blue?logo=godotengine&logoColor=white)](https://godotengine.org/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 A spherical map generator built in Godot 4.6. Uses Delaunay/Voronoi tessellation to divide a sphere into regions, then simulates tectonics and climate to assign biomes and elevation.
 
