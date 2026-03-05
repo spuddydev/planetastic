@@ -5,12 +5,12 @@
 [node name="Planet" type="Node3D" unique_id=2084971532]
 script = ExtResource("1_planet")
 planet_seed = -98765456787664
-level = 6
+level = 5
 distortion = 0.8
 radius = 10.0
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=2002035134]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 20, 0, 0)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 17.04996, 0, 0)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=2119328900]
 transform = Transform3D(0.9826128, 0.13797718, 0.12423523, 0, -0.6691307, 0.7431448, 0.18566662, -0.7302236, -0.6574964, -19.383131, 0, 0)

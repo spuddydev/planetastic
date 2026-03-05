@@ -1,34 +1,52 @@
-# Planetastic
+<div align="center">
+  <img src="docs/sample_planet.png" alt="Sample generated planet" width="300">
+  <br>
+  <h1>Planetastic</h1>
+</div>
 
-[![Tests](https://github.com/spuddydev/planetastic/actions/workflows/test.yml/badge.svg)](https://github.com/spuddydev/planetastic/actions/workflows/test.yml)
-[![Godot 4.6](https://img.shields.io/badge/Godot-4.6-blue?logo=godotengine&logoColor=white)](https://godotengine.org/)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Licence: MIT](https://img.shields.io/badge/Licence-MIT-yellow.svg)](LICENSE)
+<p align="center">
+  <a href="https://github.com/spuddydev/planetastic/actions/workflows/test.yml"><img src="https://github.com/spuddydev/planetastic/actions/workflows/test.yml/badge.svg" alt="Tests"></a>
+  <a href="https://godotengine.org/"><img src="https://img.shields.io/badge/Godot-4.6-blue?logo=godotengine&logoColor=white" alt="Godot 4.6"></a>
+  <a href="https://github.com/psf/black"><img src="https://img.shields.io/badge/code%20style-black-000000.svg" alt="Code style: black"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/Licence-MIT-yellow.svg" alt="Licence: MIT"></a>
+</p>
 
-A spherical map generator built in Godot 4.6. Uses Delaunay/Voronoi tessellation to divide a sphere into regions, then simulates tectonics and climate to assign biomes and elevation.
 
-## Prerequisites
+A procedural planet generator for Godot 4.6.
+
+## Features
+
+- Sphere generation with non-uniform cells via Delaunay/Voronoi tessellation
+- Edge perturbation and centroid relaxation for organic-looking regions
+- Dual mesh (Voronoi-like) construction from triangle topology
+
+### Planned
+
+- Tectonic elevation simulation
+- Precipitation/temperature biome modelling
+
+## Getting Started
+
+### Prerequisites
 
 - [Godot 4.6](https://godotengine.org/) (Forward Plus renderer, Jolt Physics)
-- [GUT](https://gut.readthedocs.io/) — Godot Unit Testing framework (install via AssetLib or manually into `addons/gut/`)
 - [gdtoolkit 4.x](https://github.com/Scony/godot-gdscript-toolkit) — linting and formatting
-  ```bash
-  pipx install "gdtoolkit==4.*"
-  ```
+```bash
+pipx install "gdtoolkit==4.*"
+```
 - [pre-commit](https://pre-commit.com/) — optional, for automatic lint/format on commit
-  ```bash
-  pre-commit install
-  ```
+```bash
+pre-commit install
+```
 
-## Setup
+### Installation
 
-1. Clone the repository.
-2. Install GUT into `addons/gut/` if not already present.
-3. Open the project in Godot 4.6.
+```bash
+git clone https://github.com/spuddydev/planetastic.git
+cd planetastic
+```
 
-## Usage
-
-Open the project in the Godot editor and run the main scene.
+Open the project in Godot 4.6 and run the main scene.
 
 ## Testing
 
@@ -46,14 +64,17 @@ godot --headless -s res://addons/gut/gut_cmdln.gd -gdir=res://tests -gtest=res:/
 
 ```
 src/
-├── planet/       # Top-level planet scene and orchestration
-├── sphere/       # Sphere tessellation (Delaunay/Voronoi mesh generation)
-├── tectonics/    # Tectonic plate simulation and boundaries
-├── climate/      # Wind, moisture, biome classification
+├── planet/       # Planet scene and orchestration
+├── sphere/       # Delaunay/Voronoi mesh generation
+├── tectonics/    # Plate simulation and boundaries (planned)
+├── climate/      # Wind, moisture, biomes (planned)
 └── common/       # Shared math and mesh utilities
-
-shaders/          # Shared shaders
-resources/        # Shared materials, noise configs (.tres)
-autoloads/        # Singletons registered in Project Settings
-tests/            # Unit and integration tests
 ```
+
+## Contributing
+
+Contributions are welcome. Please open an issue first to discuss what you'd like to change.
+
+## Licence
+
+Distributed under the MIT Licence. See [LICENSE](LICENSE) for details.
