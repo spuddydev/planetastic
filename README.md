@@ -12,7 +12,7 @@
 </p>
 
 
-A procedural planet generator for Godot 4.6.
+<p align="center">A procedural planet generator for Godot 4.6.</p>
 
 ## Features
 
@@ -30,11 +30,14 @@ A procedural planet generator for Godot 4.6.
 ### Prerequisites
 
 - [Godot 4.6](https://godotengine.org/) (Forward Plus renderer, Jolt Physics)
+
+### For development
+
 - [gdtoolkit 4.x](https://github.com/Scony/godot-gdscript-toolkit) — linting and formatting
 ```bash
 pipx install "gdtoolkit==4.*"
 ```
-- [pre-commit](https://pre-commit.com/) — optional, for automatic lint/format on commit
+- [pre-commit](https://pre-commit.com/) — automatic lint/format on commit
 ```bash
 pre-commit install
 ```
