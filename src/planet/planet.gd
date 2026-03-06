@@ -26,6 +26,11 @@ const INTERLEAVE_ROUNDS := 6
 @export_range(0.1, 1000.0) var radius: float = 100.0:
 	set = _set_radius
 
+## Generation method resource (e.g. TectonicGeneration). Assign in the
+## inspector to control how elevation, moisture, etc. are computed.
+@export var generation_method: GenerationMethod:
+	set = _set_generation_method
+
 ## Generated sphere topology — kept for future systems (tectonics, biomes, etc.).
 var sphere_data: SphereData
 
@@ -76,6 +81,11 @@ func _set_distortion(value: float) -> void:
 
 func _set_radius(value: float) -> void:
 	radius = value
+	_dirty = true
+
+
+func _set_generation_method(value: GenerationMethod) -> void:
+	generation_method = value
 	_dirty = true
 
 
