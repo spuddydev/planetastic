@@ -27,6 +27,3 @@ var temperature: float = NAN
 
 ## Biome classification index (-1 = unassigned)
 var biome: int = -1
-
-## Which tectonic plate this cell belongs to (-1 = unassigned)
-var plate_id: int = -1
