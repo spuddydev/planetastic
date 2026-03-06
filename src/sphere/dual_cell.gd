@@ -15,3 +15,15 @@ var corners: PackedVector3Array
 ## Indices of neighbouring cells, matching corner order. neighbour_indices[i]
 ## is the cell that shares the edge between corners[i] and corners[i+1].
 var neighbour_indices: PackedInt32Array
+
+## Normalised elevation (0.0-1.0). NAN means not yet computed
+var elevation: float = NAN
+
+## Normalised moisture (0.0-1.0). NAN means not yet computed
+var moisture: float = NAN
+
+## Normalised temperature (0.0-1.0). NAN means not yet computed
+var temperature: float = NAN
+
+## Biome classification index (-1 = unassigned)
+var biome: int = -1
