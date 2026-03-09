@@ -40,9 +40,13 @@ func _colour_by_plate(cells: Array[DualCell], rng: RandomNumberGenerator) -> voi
 	var plate_colours: PackedColorArray = PackedColorArray()
 	plate_colours.resize(plates.size())
 	for plate in plates:
-		var hue := 0.65 if plate.type == Plate.Type.OCEANIC else rng.randf()
-		var val := 0.25 if plate.type == Plate.Type.OCEANIC else 0.85
-		plate_colours[plate.id] = Color.from_hsv(hue, 0.9, val)
+		if plate.type == Plate.Type.OCEANIC:
+			plate_colours[plate.id] = Color.from_hsv(0.65, 0.9, 0.25)
+		else:
+			var hue := rng.randf()
+			var sat := rng.randf_range(0.4, 1.0)
+			var val := rng.randf_range(0.5, 0.95)
+			plate_colours[plate.id] = Color.from_hsv(hue, sat, val)
 
 	for idx in cells.size():
 		cells[idx].colour = plate_colours[cell_plate_map[idx]]
