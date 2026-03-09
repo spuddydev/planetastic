@@ -31,10 +31,10 @@ static func seed_plates(
 	var plates := _create_plates(seed_indices, cells, count)
 	_assign_types(plates, oceanic_ratio, rng)
 	_assign_desired_elevations(plates, rng)
-	_assign_movements(plates, rng, speed_min, speed_max)
 
 	var cell_plate_map := _flood_fill(cells, plates, rng, growth_min, growth_max)
 	_recompute_centres(cells, plates)
+	_assign_movements(plates, rng, speed_min, speed_max)
 
 	return {"plates": plates, "cell_plate_map": cell_plate_map}
 

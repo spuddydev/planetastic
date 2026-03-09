@@ -117,6 +117,18 @@ func test_desired_elevation_within_type_range() -> void:
 			)
 
 
+func test_movement_is_tangent_to_sphere() -> void:
+	# Movement vector should be perpendicular to the plate centre normal
+	var result := _seed_plates()
+	var plates: Array[Plate] = result["plates"]
+	for plate in plates:
+		var normal := plate.centre.normalized()
+		var dot := absf(plate.movement.dot(normal))
+		assert_almost_eq(
+			dot, 0.0, 0.01, "plate %d movement should be tangent (dot=%f)" % [plate.id, dot]
+		)
+
+
 func test_movement_vectors_are_nonzero() -> void:
 	# Every plate should have a non-zero movement vector
 	var result := _seed_plates()

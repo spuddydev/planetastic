@@ -5,16 +5,14 @@
 
 [sub_resource type="Resource" id="Resource_oahgr"]
 script = ExtResource("2_tq3wj")
-plate_count = 60
-oceanic_ratio = 0.4
+plate_count = 45
 growth_rate_min = 0.6
 metadata/_custom_type_script = "uid://cdieul70hg638"
 
 [node name="Planet" type="Node3D" unique_id=2084971532]
 script = ExtResource("1_planet")
-planet_seed = -33
+planet_seed = -35
 level = 6
-distortion = 0.75
 radius = 10.0
 generation_method = SubResource("Resource_oahgr")
 
