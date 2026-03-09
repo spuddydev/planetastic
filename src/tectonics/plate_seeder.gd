@@ -80,23 +80,40 @@ static func _assign_types(
 	var count := plates.size()
 	var oceanic_count := roundi(count * oceanic_ratio)
 
-	# Build shuffled type list
-	var types: Array[int] = []
+	# Sort plate indices by longitude for spatial ordering
+	var sorted_indices: Array[int] = []
 	for i in count:
-		if i < oceanic_count:
-			types.append(Plate.Type.OCEANIC)
+		sorted_indices.append(i)
+	sorted_indices.sort_custom(
+		func(a: int, b: int) -> bool:
+			var lon_a := atan2(plates[a].centre.z, plates[a].centre.x)
+			var lon_b := atan2(plates[b].centre.z, plates[b].centre.x)
+			return lon_a < lon_b
+	)
+
+	# Evenly space oceanic slots along the sorted order, then jitter
+	var oceanic_slots := {}
+	if oceanic_count > 0:
+		var spacing := float(count) / oceanic_count
+		for i in oceanic_count:
+			var base := roundi(i * spacing)
+			var jitter := rng.randi_range(-1, 1)
+			var slot := clampi(base + jitter, 0, count - 1)
+			oceanic_slots[slot] = true
+
+		# If jitter caused collisions, fill remaining slots nearby
+		while oceanic_slots.size() < oceanic_count:
+			for s in count:
+				if not oceanic_slots.has(s):
+					oceanic_slots[s] = true
+					break
+
+	for i in count:
+		var plate_idx: int = sorted_indices[i]
+		if oceanic_slots.has(i):
+			plates[plate_idx].type = Plate.Type.OCEANIC
 		else:
-			types.append(Plate.Type.CONTINENTAL)
-
-	# Fisher-Yates shuffle with seeded rng
-	for i in range(count - 1, 0, -1):
-		var j := rng.randi_range(0, i)
-		var tmp := types[i]
-		types[i] = types[j]
-		types[j] = tmp
-
-	for i in count:
-		plates[i].type = types[i] as Plate.Type
+			plates[plate_idx].type = Plate.Type.CONTINENTAL
 
 
 ## Randomise desired elevation within type range
