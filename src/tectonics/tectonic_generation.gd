@@ -8,10 +8,10 @@ extends GenerationMethod
 ## generation_method export.
 
 ## Number of tectonic plates to generate
-@export var plate_count: int = 12
+@export var plate_count: int = 30
 
 ## Ratio of oceanic to total plates (0.0 = all continental, 1.0 = all oceanic)
-@export_range(0.0, 1.0, 0.01) var oceanic_ratio: float = 0.6
+@export_range(0.0, 1.0, 0.01) var oceanic_ratio: float = 0.35
 
 ## Generated plates, available after generate() for later batches
 var plates: Array[Plate]

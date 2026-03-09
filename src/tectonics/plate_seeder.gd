@@ -5,6 +5,16 @@ extends RefCounted
 ## Uses farthest-point heuristic for seed placement, then simultaneous BFS
 ## flood-fill to grow plates into roughly equal, organic shapes.
 
+const OCEANIC_ELEVATION_MIN := 0.1
+const OCEANIC_ELEVATION_MAX := 0.3
+const CONTINENTAL_ELEVATION_MIN := 0.5
+const CONTINENTAL_ELEVATION_MAX := 0.8
+const MOVEMENT_SPEED_MIN := 0.3
+const MOVEMENT_SPEED_MAX := 1.0
+const GROWTH_RATE_MIN := 0.75
+const GROWTH_RATE_MAX := 1
+const TANGENT_EPSILON := 0.0001
+
 
 ## Seed plates and assign every cell to one. Returns a dictionary with:
 ##   "plates": Array[Plate] — the generated plates
@@ -22,45 +32,26 @@ static func seed_plates(
 	_assign_desired_elevations(plates, rng)
 	_assign_movements(plates, rng)
 
-	var cell_plate_map := _flood_fill(cells, plates)
+	var cell_plate_map := _flood_fill(cells, plates, rng)
 	_recompute_centres(cells, plates)
 
 	return {"plates": plates, "cell_plate_map": cell_plate_map}
 
 
-## Pick seed cells spread across the sphere using farthest-point heuristic
+## Pick seed cells randomly across the sphere
 static func _pick_seeds(
 	cells: Array[DualCell],
 	count: int,
 	rng: RandomNumberGenerator,
 ) -> PackedInt32Array:
 	var seeds := PackedInt32Array()
-	seeds.append(rng.randi_range(0, cells.size() - 1))
-
-	# Track minimum arc distance from each cell to any seed
-	var min_dists := PackedFloat32Array()
-	min_dists.resize(cells.size())
-	for i in cells.size():
-		min_dists[i] = INF
-
-	for _s in range(1, count):
-		# Update min distances with the latest seed
-		var latest := seeds[seeds.size() - 1]
-		var latest_pos := cells[latest].center
-		for i in cells.size():
-			var d := latest_pos.angle_to(cells[i].center)
-			if d < min_dists[i]:
-				min_dists[i] = d
-
-		# Pick the cell with the largest minimum distance to any seed
-		var best_idx := 0
-		var best_dist := -1.0
-		for i in cells.size():
-			if min_dists[i] > best_dist:
-				best_dist = min_dists[i]
-				best_idx = i
-		seeds.append(best_idx)
-
+	var used := {}
+	for _i in count:
+		var idx := rng.randi_range(0, cells.size() - 1)
+		while used.has(idx):
+			idx = rng.randi_range(0, cells.size() - 1)
+		used[idx] = true
+		seeds.append(idx)
 	return seeds
 
 
@@ -114,9 +105,11 @@ static func _assign_desired_elevations(
 ) -> void:
 	for plate in plates:
 		if plate.type == Plate.Type.OCEANIC:
-			plate.desired_elevation = rng.randf_range(0.1, 0.3)
+			plate.desired_elevation = rng.randf_range(OCEANIC_ELEVATION_MIN, OCEANIC_ELEVATION_MAX)
 		else:
-			plate.desired_elevation = rng.randf_range(0.5, 0.8)
+			plate.desired_elevation = rng.randf_range(
+				CONTINENTAL_ELEVATION_MIN, CONTINENTAL_ELEVATION_MAX
+			)
 
 
 ## Generate random tangent movement vectors at each plate's centre
@@ -133,26 +126,35 @@ static func _assign_movements(
 		# Project onto tangent plane: subtract component along centre normal
 		var normal := plate.centre.normalized()
 		var tangent := random_vec - normal * random_vec.dot(normal)
-		if tangent.length_squared() < 0.0001:
+		if tangent.length_squared() < TANGENT_EPSILON:
 			tangent = normal.cross(Vector3.UP)
-			if tangent.length_squared() < 0.0001:
+			if tangent.length_squared() < TANGENT_EPSILON:
 				tangent = normal.cross(Vector3.RIGHT)
 		tangent = tangent.normalized()
 
 		# Scale by random speed
-		var speed := rng.randf_range(0.3, 1.0)
+		var speed := rng.randf_range(MOVEMENT_SPEED_MIN, MOVEMENT_SPEED_MAX)
 		plate.movement = tangent * speed
 
 
-## Simultaneous BFS flood-fill from all seeds. Returns cell-to-plate map
+## Weighted BFS flood-fill from all seeds. Each plate gets a random growth
+## rate so some plates grow faster than others, producing varied sizes.
+## Returns cell-to-plate map
 static func _flood_fill(
 	cells: Array[DualCell],
 	plates: Array[Plate],
+	rng: RandomNumberGenerator,
 ) -> PackedInt32Array:
 	var cell_count := cells.size()
 	var cell_plate_map := PackedInt32Array()
 	cell_plate_map.resize(cell_count)
 	cell_plate_map.fill(-1)
+
+	# Random growth rate per plate (0.3 = slow/small, 2.0 = fast/large)
+	var growth_rates := PackedFloat32Array()
+	growth_rates.resize(plates.size())
+	for i in plates.size():
+		growth_rates[i] = rng.randf_range(GROWTH_RATE_MIN, GROWTH_RATE_MAX)
 
 	# Initialise frontiers with seed cells (one per plate)
 	var frontiers: Array[Array] = []
@@ -169,13 +171,22 @@ static func _flood_fill(
 		plate.cell_indices.append(best_idx)
 		frontiers.append([best_idx])
 
-	# Round-robin BFS: each plate expands one layer per round
+	# Weighted BFS: accumulate growth rate each round, expand when >= 1.0
+	var accumulators := PackedFloat32Array()
+	accumulators.resize(plates.size())
+	accumulators.fill(0.0)
+
 	var assigned := plates.size()
 	while assigned < cell_count:
 		for plate_idx in plates.size():
 			var frontier: Array = frontiers[plate_idx]
 			if frontier.is_empty():
 				continue
+
+			accumulators[plate_idx] += growth_rates[plate_idx]
+			if accumulators[plate_idx] < 1.0:
+				continue
+			accumulators[plate_idx] -= 1.0
 
 			var next_frontier: Array = []
 			for cell_idx: int in frontier:
