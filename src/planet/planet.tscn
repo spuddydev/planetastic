@@ -1,20 +1,28 @@
 [gd_scene format=3 uid="uid://cvpfwsne7cmw2"]
 
 [ext_resource type="Script" uid="uid://clu6dlvmo5bpg" path="res://src/planet/planet.gd" id="1_planet"]
+[ext_resource type="Script" uid="uid://cdieul70hg638" path="res://src/tectonics/tectonic_generation.gd" id="2_tq3wj"]
+
+[sub_resource type="Resource" id="Resource_oahgr"]
+script = ExtResource("2_tq3wj")
+plate_count = 60
+oceanic_ratio = 0.4
+growth_rate_min = 0.6
+metadata/_custom_type_script = "uid://cdieul70hg638"
 
 [node name="Planet" type="Node3D" unique_id=2084971532]
 script = ExtResource("1_planet")
-planet_seed = -34
+planet_seed = -33
 level = 6
-distortion = 0.8
+distortion = 0.75
 radius = 10.0
-generation_method = SubResource("Resource_tq3wj")
+generation_method = SubResource("Resource_oahgr")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=2002035134]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 17.04996, 0, 0)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=2119328900]
-transform = Transform3D(0.9986295, 0.045324262, 0.026168022, -4.3711385e-08, -0.49999997, 0.86602545, 0.052335974, -0.86483854, -0.49931473, -19.383131, 0, 0)
+transform = Transform3D(0.9826128, 0.13797718, 0.12423523, 0, -0.6691307, 0.7431448, 0.18566662, -0.7302236, -0.6574964, -19.383131, 0, 0)
 light_energy = 1.316
 light_specular = 0.0
 shadow_bias = 10.0
