@@ -13,6 +13,18 @@ extends GenerationMethod
 ## Ratio of oceanic to total plates (0.0 = all continental, 1.0 = all oceanic)
 @export_range(0.0, 1.0, 0.01) var oceanic_ratio: float = 0.35
 
+## Minimum plate movement speed
+@export_range(0.0, 2.0, 0.01) var movement_speed_min: float = 0.3
+
+## Maximum plate movement speed
+@export_range(0.0, 2.0, 0.01) var movement_speed_max: float = 1.0
+
+## Minimum plate growth rate during flood-fill (slower = smaller plates)
+@export_range(0.1, 3.0, 0.01) var growth_rate_min: float = 0.75
+
+## Maximum plate growth rate during flood-fill (faster = larger plates)
+@export_range(0.1, 3.0, 0.01) var growth_rate_max: float = 1.0
+
 ## Generated plates, available after generate() for later batches
 var plates: Array[Plate]
 
@@ -21,7 +33,19 @@ var cell_plate_map: PackedInt32Array
 
 
 func generate(cells: Array[DualCell], rng: RandomNumberGenerator) -> void:
-	var result := PlateSeeder.seed_plates(cells, plate_count, oceanic_ratio, rng)
+	var result := (
+		PlateSeeder
+		. seed_plates(
+			cells,
+			plate_count,
+			oceanic_ratio,
+			rng,
+			movement_speed_min,
+			movement_speed_max,
+			growth_rate_min,
+			growth_rate_max,
+		)
+	)
 	plates = result["plates"]
 	cell_plate_map = result["cell_plate_map"]
 	_colour_by_plate(cells, rng)
