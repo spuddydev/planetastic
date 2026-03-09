@@ -27,3 +27,6 @@ var temperature: float = NAN
 
 ## Biome classification index (-1 = unassigned)
 var biome: int = -1
+
+## Display colour set by the generation method. Transparent = use default
+var colour: Color = Color.TRANSPARENT

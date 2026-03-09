@@ -112,7 +112,6 @@ func _regenerate() -> void:
 	cells = DualMeshBuilder.build(sphere_data)
 
 	# Run generation method (elevation, moisture, biomes, etc.)
-	# This isn't implemented yet...
 	if generation_method:
 		var gen_rng := RandomNumberGenerator.new()
 		gen_rng.seed = hash(planet_seed)
