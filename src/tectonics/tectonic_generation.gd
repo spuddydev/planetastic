@@ -1,3 +1,4 @@
+@tool
 class_name TectonicGeneration
 extends GenerationMethod
 ## Generates elevation via tectonic plate simulation.
@@ -23,6 +24,7 @@ func generate(cells: Array[DualCell], rng: RandomNumberGenerator) -> void:
 	var result := PlateSeeder.seed_plates(cells, plate_count, oceanic_ratio, rng)
 	plates = result["plates"]
 	cell_plate_map = result["cell_plate_map"]
+	_colour_by_plate(cells, rng)
 
 
 func get_generation_name() -> String:
@@ -31,3 +33,16 @@ func get_generation_name() -> String:
 
 func get_provided_fields() -> PackedStringArray:
 	return PackedStringArray(["elevation"])
+
+
+## Assign each cell a colour based on its plate
+func _colour_by_plate(cells: Array[DualCell], rng: RandomNumberGenerator) -> void:
+	var plate_colours: PackedColorArray = PackedColorArray()
+	plate_colours.resize(plates.size())
+	for plate in plates:
+		var hue := 0.65 if plate.type == Plate.Type.OCEANIC else rng.randf()
+		var val := 0.25 if plate.type == Plate.Type.OCEANIC else 0.85
+		plate_colours[plate.id] = Color.from_hsv(hue, 0.9, val)
+
+	for idx in cells.size():
+		cells[idx].colour = plate_colours[cell_plate_map[idx]]
