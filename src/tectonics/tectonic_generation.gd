@@ -19,8 +19,10 @@ var plates: Array[Plate]
 var cell_plate_map: PackedInt32Array
 
 
-func generate(_cells: Array[DualCell], _rng: RandomNumberGenerator) -> void:
-	pass
+func generate(cells: Array[DualCell], rng: RandomNumberGenerator) -> void:
+	var result := PlateSeeder.seed_plates(cells, plate_count, oceanic_ratio, rng)
+	plates = result["plates"]
+	cell_plate_map = result["cell_plate_map"]
 
 
 func get_generation_name() -> String:
