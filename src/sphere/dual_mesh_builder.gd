@@ -30,11 +30,13 @@ static func build(data: SphereData) -> Array[DualCell]:
 		var fan: PackedInt32Array = result["fan"]
 		var neighbours: PackedInt32Array = result["neighbours"]
 
-		# Ensure CCW winding via cross product against the vertex normal
-		var c0 := centroids[fan[0]]
-		var c1 := centroids[fan[1]]
-		var cross := (c0 - cell.center).cross(c1 - cell.center)
-		if cross.dot(cell.center) < 0.0:
+		# Ensure CCW winding via summed cross product
+		var winding_cross := Vector3.ZERO
+		for fi in fan.size():
+			var ca := centroids[fan[fi]]
+			var cb := centroids[fan[(fi + 1) % fan.size()]]
+			winding_cross += (ca - cell.center).cross(cb - cell.center)
+		if winding_cross.dot(cell.center) < 0.0:
 			fan.reverse()
 			# Reverse first N-1 neighbours to match new fan order; last stays
 			var n := neighbours.size()
