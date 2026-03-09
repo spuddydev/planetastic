@@ -26,7 +26,9 @@ static func build(data: SphereData) -> Array[DualCell]:
 		cell.center = data.vertices[vi]
 
 		# Walk the triangle fan topologically via shared edges
-		var fan := _walk_fan(data, vi)
+		var result := _walk_fan(data, vi)
+		var fan: PackedInt32Array = result["fan"]
+		var neighbours: PackedInt32Array = result["neighbours"]
 
 		# Ensure CCW winding via cross product against the vertex normal
 		var c0 := centroids[fan[0]]
@@ -34,13 +36,21 @@ static func build(data: SphereData) -> Array[DualCell]:
 		var cross := (c0 - cell.center).cross(c1 - cell.center)
 		if cross.dot(cell.center) < 0.0:
 			fan.reverse()
+			# Reverse first N-1 neighbours to match new fan order; last stays
+			var n := neighbours.size()
+			var fixed := PackedInt32Array()
+			fixed.resize(n)
+			for i in n - 1:
+				fixed[i] = neighbours[n - 2 - i]
+			fixed[n - 1] = neighbours[n - 1]
+			neighbours = fixed
 
-		# Build corners and neighbour indices from the fan order
+		# Build corners from the fan order
 		var corners := PackedVector3Array()
 		for ti in fan:
 			corners.append(centroids[ti])
 		cell.corners = corners
-		cell.neighbour_indices = _find_neighbours(data, vi, fan)
+		cell.neighbour_indices = neighbours
 
 		cells[vi] = cell
 
@@ -48,11 +58,14 @@ static func build(data: SphereData) -> Array[DualCell]:
 
 
 ## Walk the triangle fan around a vertex by following shared edges.
-## Returns triangle indices in topological fan order (consistent winding,
-## but not guaranteed CCW — caller must check).
-static func _walk_fan(data: SphereData, vi: int) -> PackedInt32Array:
+## Returns { "fan": PackedInt32Array, "neighbours": PackedInt32Array }.
+## Fan entries are triangle indices in topological order (consistent winding,
+## but not guaranteed CCW — caller must check). Neighbours[i] is the vertex
+## index shared by fan[i] and fan[(i+1) % N], i.e. the adjacent dual cell.
+static func _walk_fan(data: SphereData, vi: int) -> Dictionary:
 	var tri_indices := data.get_vertex_triangles(vi)
 	var fan := PackedInt32Array()
+	var neighbours := PackedInt32Array()
 	fan.append(tri_indices[0])
 
 	# Pick the first other vertex in the starting triangle as initial direction
@@ -60,13 +73,14 @@ static func _walk_fan(data: SphereData, vi: int) -> PackedInt32Array:
 	var tri := data.get_triangle(current_ti)
 	var verts := [tri.x, tri.y, tri.z]
 
-	var prev_shared := -1
+	var first_shared := -1
 	for v: int in verts:
 		if v != vi:
-			prev_shared = v
+			first_shared = v
 			break
 
 	# Walk around the fan by crossing edges
+	var prev_shared := first_shared
 	for _step in tri_indices.size() - 1:
 		# Find the other vertex in current triangle (not vi, not prev_shared)
 		tri = data.get_triangle(current_ti)
@@ -77,6 +91,9 @@ static func _walk_fan(data: SphereData, vi: int) -> PackedInt32Array:
 				next_shared = v
 				break
 
+		# next_shared is the neighbour between this fan entry and the next
+		neighbours.append(next_shared)
+
 		# Cross the edge (vi, next_shared) to the adjacent triangle
 		var adj := data.get_edge_triangles(vi, next_shared)
 		var next_ti: int = adj[1] if adj[0] == current_ti else adj[0]
@@ -85,34 +102,7 @@ static func _walk_fan(data: SphereData, vi: int) -> PackedInt32Array:
 		prev_shared = next_shared
 		current_ti = next_ti
 
-	return fan
+	# Wrap-around: first_shared is shared between the last and first fan entry
+	neighbours.append(first_shared)
 
-
-## Find the neighbour cell indices for a vertex's dual cell.
-## Each consecutive pair of fan-ordered triangle indices shares an edge,
-## and the shared vertex (other than vi) is the neighbour cell index.
-static func _find_neighbours(
-	data: SphereData,
-	vi: int,
-	fan: PackedInt32Array,
-) -> PackedInt32Array:
-	var neighbours := PackedInt32Array()
-
-	for ci in fan.size():
-		var ti_a := fan[ci]
-		var ti_b := fan[(ci + 1) % fan.size()]
-
-		# The neighbour is the vertex (other than vi) shared by both triangles
-		var tri_a := data.get_triangle(ti_a)
-		var tri_b := data.get_triangle(ti_b)
-		var verts_a := [tri_a.x, tri_a.y, tri_a.z]
-		var verts_b := [tri_b.x, tri_b.y, tri_b.z]
-
-		var found := -1
-		for v in verts_a:
-			if v != vi and v in verts_b:
-				found = v
-				break
-		neighbours.append(found)
-
-	return neighbours
+	return {"fan": fan, "neighbours": neighbours}

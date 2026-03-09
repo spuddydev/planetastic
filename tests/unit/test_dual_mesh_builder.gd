@@ -46,7 +46,7 @@ func test_neighbour_symmetry() -> void:
 	for i in cells.size():
 		for ni in cells[i].neighbour_indices:
 			if ni == -1:
-				continue
+				break
 			var found := false
 			for nj in cells[ni].neighbour_indices:
 				if nj == i:
